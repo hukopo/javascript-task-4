@@ -14,14 +14,13 @@ function getEmitter() {
     return {
         listener: {},
         on: function (event, context, handler) {
-            // handler.bind(context)();
-            if (this.listener[event] === undefined) {
+            if (!this.listener[event]) {
                 this.listener[event] = { contexts: new Map() };
             }
 
             const currentEventContexts = this.listener[event].contexts;
 
-            if (currentEventContexts.get(context) === undefined) {
+            if (!currentEventContexts.get(context)) {
                 currentEventContexts.set(context, []);
             }
 
@@ -42,36 +41,33 @@ function getEmitter() {
             const eventSplit = event.split(/\./);
             const events = [];
             let currentEvent = '';
+
             eventSplit.forEach(e => {
                 currentEvent += currentEvent.length === 0 ? e : '.' + e;
                 events.push(currentEvent);
             });
             events.reverse();
-            events.forEach(e => this.emit2(e));
 
-            return this;
-        },
-        emit2: function (event) {
-            if (!this.listener.hasOwnProperty(event)) {
-                return this;
-            }
+            events.forEach(e => {
+                if (!this.listener.hasOwnProperty(e)) {
+                    return this;
+                }
 
-            this.listener[event].contexts
-                .forEach((v) => {
-                    v.forEach(f => f());
-                });
+                this.listener[e].contexts
+                    .forEach((v) => {
+                        v.forEach(f => f());
+                    });
+            });
 
             return this;
         },
         several: function (event, context, handler, times) {
             this.on(event, context,
                 function () {
-                    if (this.callCount >= this.maxCallCount) {
-                        this.callCount++;
-
+                    this.callCount++;
+                    if (this.callCount > this.maxCallCount) {
                         return;
                     }
-                    this.callCount++;
                     handler.call(this.context);
                 }.bind({ callCount: 0, maxCallCount: times, context: context }));
 
@@ -80,12 +76,10 @@ function getEmitter() {
         through: function (event, context, handler, frequency) {
             this.on(event, context,
                 function () {
-                    if (this.callCount % this.frequency !== 0) {
-                        this.callCount++;
-
+                    this.callCount++;
+                    if (this.callCount % this.frequency !== 1) {
                         return;
                     }
-                    this.callCount++;
                     handler.call(this.context);
                 }.bind({ callCount: 0, frequency: frequency, context: context }));
 
