@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-const isStar = false;
+const isStar = true;
 
 /**
  * Возвращает новый emitter
@@ -63,37 +63,33 @@ function getEmitter() {
 
             return this;
         },
-
-        /**
-         * Подписаться на событие с ограничением по количеству полученных уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} times – сколько раз получить уведомление
-         */
         several: function (event, context, handler, times) {
             this.on(event, context,
                 function () {
-                    if (this.callCount > this.maxCallCount) {
+                    if (this.callCount >= this.maxCallCount) {
+                        this.callCount++;
+
                         return;
                     }
                     this.callCount++;
-                    handler(this.context);
+                    handler.call(this.context);
                 }.bind({ callCount: 0, maxCallCount: times, context: context }));
-            console.info(event, context, handler, times);
-        },
 
-        /**
-         * Подписаться на событие с ограничением по частоте получения уведомлений
-         * @star
-         * @param {String} event
-         * @param {Object} context
-         * @param {Function} handler
-         * @param {Number} frequency – как часто уведомлять
-         */
+            return this;
+        },
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            this.on(event, context,
+                function () {
+                    if (this.callCount % this.frequency !== 0) {
+                        this.callCount++;
+
+                        return;
+                    }
+                    this.callCount++;
+                    handler.call(this.context);
+                }.bind({ callCount: 0, frequency: frequency, context: context }));
+
+            return this;
         }
     };
 }
