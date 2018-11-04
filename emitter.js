@@ -31,7 +31,7 @@ function getEmitter() {
         },
         off: function (event, context) {
             Object.keys(this.listener).forEach(k => {
-                if (k.startsWith(event)) {
+                if (k.startsWith(event + '.') || event === k) {
                     this.listener[k].contexts.delete(context);
                 }
             });
