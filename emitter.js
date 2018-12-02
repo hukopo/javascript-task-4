@@ -46,9 +46,7 @@ function getEmitter() {
                 currentEvent += currentEvent.length === 0 ? e : '.' + e;
                 events.push(currentEvent);
             });
-            events.reverse();
-
-            events.forEach(e => {
+            events.reverse().forEach(e => {
                 if (!this.listener.hasOwnProperty(e)) {
                     return this;
                 }
@@ -63,27 +61,31 @@ function getEmitter() {
         },
         several: function (event, context, handler, times) {
             this.on(event, context,
-                function () {
-                    this.callCount++;
-                    if (this.callCount > this.maxCallCount) {
-                        return;
-                    }
-                    handler.call(this.context);
-                }.bind({ callCount: 0, maxCallCount: times, context: context }));
+                this.forTheFirstNEvents.bind({ callCount: 0, maxCallCount: times,
+                    context: context, handler: handler }));
 
             return this;
         },
         through: function (event, context, handler, frequency) {
             this.on(event, context,
-                function () {
-                    this.callCount++;
-                    if (this.callCount % this.frequency !== 1) {
-                        return;
-                    }
-                    handler.call(this.context);
-                }.bind({ callCount: 0, frequency: frequency, context: context }));
+                this.forEveryNthEvent.bind({ callCount: 0, frequency: frequency,
+                    context: context, handler: handler }));
 
             return this;
+        },
+        forTheFirstNEvents: function () {
+            this.callCount++;
+            if (this.callCount > this.maxCallCount) {
+                return;
+            }
+            this.handler.call(this.context);
+        },
+        forEveryNthEvent: function () {
+            this.callCount++;
+            if (this.callCount % this.frequency !== 1) {
+                return;
+            }
+            this.handler.call(this.context);
         }
     };
 }
